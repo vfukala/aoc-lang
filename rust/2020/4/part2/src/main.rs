@@ -2,17 +2,14 @@ use std::io;
 use std::io::BufRead;
 
 fn is_in_range(s: &str, low: i32, high: i32) -> bool {
-    let prs = s.parse::<i32>();
-    if prs.is_ok() {
-        let val = prs.unwrap();
-        return low <= val && val <= high;
-    } else {
-        return false;
+    match s.parse::<i32>() {
+        Ok(val) => low <= val && val <= high,
+        Err(_) => false,
     }
 }
 
 fn fdig_pred(low: i32, high: i32) -> Box<dyn Fn(&str) -> bool> {
-    return Box::new(move |s| if s.len() == 4 { is_in_range(s, low, high) } else { false });
+    Box::new(move |s| if s.len() == 4 { is_in_range(s, low, high) } else { false })
 }
 
 fn main() {
@@ -21,24 +18,24 @@ fn main() {
         .map(|list| list.join(" "))
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
-        .map(|s| s.trim().split(' ').map(|ss| { let pa = ss.split_once(':').unwrap(); return (pa.0.to_string(), pa.1.to_string()); }).collect::<Vec<(String, String)>>())
+        .map(|s| s.trim().split(' ').map(|ss| { let pa = ss.split_once(':').unwrap(); (pa.0.to_string(), pa.1.to_string()) }).collect::<Vec<(String, String)>>())
         .filter(|list| [
                 ("byr", fdig_pred(1920, 2002)),
                 ("iyr", fdig_pred(2010, 2020)),
                 ("eyr", fdig_pred(2020, 2030)),
                 ("hgt", Box::new(|s: &str| {
                     if s.ends_with("cm") {
-                        return is_in_range(&s[0..s.len() - 2], 150, 193);
+                        is_in_range(&s[0..s.len() - 2], 150, 193)
                     } else if s.ends_with("in") {
-                        return is_in_range(&s[0..s.len() - 2], 59, 76);
+                        is_in_range(&s[0..s.len() - 2], 59, 76)
                     } else {
-                        return false;
+                        false
                     }
                 })),
-                ("hcl", Box::new(|s| s.len() == 7 && s.chars().nth(0).unwrap() == '#' && s.chars().skip(1).all(|c| '0' <= c && c <= '9' || 'a' <= c && c <= 'f')
+                ("hcl", Box::new(|s| s.len() == 7 && s.starts_with('#') && s.chars().skip(1).all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
                 )),
-                ("ecl", Box::new(|s| ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].contains(&&s))),
-                ("pid", Box::new(|s| s.len() == 9 && s.chars().all(|c| '0' <= c && c <= '9')))]
+                ("ecl", Box::new(|s| ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].contains(&s))),
+                ("pid", Box::new(|s| s.len() == 9 && s.chars().all(|c| c.is_ascii_digit())))]
                     .iter().all(|(nm, pre)| 
                         match list.iter().find(|(id, _)| id == nm) {
                             Some(val) => pre(&val.1),
@@ -46,5 +43,5 @@ fn main() {
                         }
                 ))
         .count();
-    println!("{}", res);
+    println!("{res}");
 }
