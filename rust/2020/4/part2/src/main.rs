@@ -10,7 +10,7 @@ fn fdig_pred(low: i32, high: i32) -> Box<dyn Fn(&str) -> bool> {
 }
 
 fn main() {
-    let res = io::stdin().lock().lines().map(unwrap).collect::<Vec<String>>()
+    let res = io::stdin().lock().lines().map(|line| line.unwrap()).collect::<Vec<String>>()
         .split(|l| l.is_empty())
         .map(|list| list.join(" "))
         .map(|s| s.trim().to_string())
